@@ -22,6 +22,8 @@ int PEERPORT = 19000; //the peer will start acting as a server on current port p
 string USERNAME;
 bool loginattempt = false;
 bool loggedin = false;
+string UPLOADFOLDER;
+string DOWNLOADFOLDER;
 
 unordered_map<string, string> filenametochunksmap; //a map to store the number of chunks associated with each file
 
@@ -138,14 +140,16 @@ void downloadchunkfromport(int chunknum, string filename, int port)
 
     if ((readbytecounter = recv(sockfd, recvline, MAXLINE - 1, 0)))
     {
-        FILE *ofptr = fopen(("./"+chunkfilename).c_str(), "wb");
+        // cout << "creating file:  " << chunkfilename << endl;
+        FILE *ofptr = fopen((DOWNLOADFOLDER + "/"+chunkfilename).c_str(), "wb");
         if (ofptr == NULL)
         {
             cout << "Chunk file number " << chunknum << " couldn't be written here." << endl;
             return;
         }
-        cout << "RECEIVED FROM PEER CONTENT: " <<recvline << endl;
-        fwrite(recvline, sizeof(char), readbytecounter, ofptr);
+        // cout << "RECEIVED FROM PEER CONTENT: " <<recvline << endl;
+        int byteswritten = fwrite(recvline, sizeof(char), readbytecounter, ofptr);
+        // cout << "Bytes written = " << byteswritten << endl;
         if (ferror(ofptr))
         {
             cout << "Error occured in writing the chunk number: " << chunknum << " of file " << filename << endl;
@@ -233,7 +237,7 @@ void sendcommandtotracker(string input)
             }
             else
             {
-                string filepath = tokens[1];
+                string filepath = UPLOADFOLDER + "/" + tokens[1];
                 int chunkssize = split(filepath);
                 if (chunkssize == -1)
                 {
@@ -269,6 +273,11 @@ void sendcommandtotracker(string input)
             USERNAME = tokens[1];
             loginattempt = false;
             loggedin = true;
+            UPLOADFOLDER = USERNAME+"/uploads";
+            DOWNLOADFOLDER = USERNAME+"/downloads";
+            mkdir(USERNAME.c_str(), S_IRWXG|S_IRWXO | S_IRWXU);
+            mkdir(UPLOADFOLDER.c_str(), S_IRWXG|S_IRWXO | S_IRWXU );
+            mkdir(DOWNLOADFOLDER.c_str(), S_IRWXG|S_IRWXO | S_IRWXU);
         }
         else
         {
@@ -340,9 +349,9 @@ void *handlerequest(void *connfdptr)
     {
         cout << "Received request for file: " << recvline << endl;
 
-        string receivedstring = recvline;
+        string receivedstring =  UPLOADFOLDER + "/" + recvline;
         char sendarray[MAXLINE];
-        FILE * ifstream = fopen(recvline, "r");
+        FILE * ifstream = fopen(receivedstring.c_str(), "r");
         fread(sendarray, sizeof(char), MAXLINE, ifstream );
         fclose(ifstream);
         send(connfd, sendarray, strlen(sendarray), 0);
