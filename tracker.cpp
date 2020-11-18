@@ -353,16 +353,13 @@ string download_file(string gid, string fname, string dpath, string uport)
         // vector<string> seedvectors(groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.begin(), groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.end());
         rotate(seedvectors.begin(), seedvectors.begin() + groupidtogroupstructmap[gid].filenametofileinfomap[fname].roationcounter, seedvectors.end());
         cout << "NUmber of seeders of this file: = " << seedvectors.size() << endl;
-        for (string iq : seedvectors)
+        for (string STR : seedvectors)
         {
-            string port = usernameportmap[(iq)];
+            string port = usernameportmap[(STR)];
             response = response + " " + port;
         }
-        cout << "MARK 1 " << endl;
         groupidtogroupstructmap[gid].filenametofileinfomap[fname].roationcounter++;
-        cout << "MARK 2 " << endl;
     }
-    cout << "Packaging response: " << response << endl;
     return response;
 }
 void parsestring(string command, int sockfd)
