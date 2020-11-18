@@ -251,6 +251,17 @@ void sendcommandtotracker(string input)
             }
         }
     }
+    if((tokens[0] == "logout")){
+        if(loggedin == false){
+            cout << "You need to login to logout." << endl;
+            return;
+        }
+        else
+        {
+            loggedin = false;
+        }
+        
+    }
     strcpy(sendline, input.c_str());
 
     int sendbytes = strlen(sendline);

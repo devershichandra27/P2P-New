@@ -196,7 +196,7 @@ string list_request(string groupid, string userport)
         {
             response = "The list of pending approvals is ";
             unordered_set<string>::iterator iq = gs.requestlist.begin();
-            while (iq!=gs.requestlist.end())
+            while (iq != gs.requestlist.end())
             {
                 response = response + (*iq) + ", ";
                 iq++;
@@ -337,21 +337,30 @@ string download_file(string gid, string fname, string dpath, string uport)
     {
         response = "No such downloadable file exists in the group.";
     }
-    else {
+    else
+    {
         response = "Seeder_list " + fname + " ";
         int numberofchunks = groupidtogroupstructmap[gid].filenametofileinfomap[fname].chunks;
-        response = response +  to_string(numberofchunks);
-        vector<string>seedvectors(groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.begin(),groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.end()) ;
-        rotate(seedvectors.begin(), seedvectors.begin()+groupidtogroupstructmap[gid].filenametofileinfomap[fname].roationcounter, seedvectors.end());
-        cout << "NUmber of seeders of this file: = "<< seedvectors.size() << endl;
-        for(string iq : seedvectors){
+        response = response + to_string(numberofchunks);
+        unordered_set<string>::iterator iq = groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.begin();
+        vector<string> seedvectors;
+        while(iq!=groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.end()){
+            if(onlineusersset.count(*iq) != 0 ){
+                seedvectors.push_back(*iq);
+            }
+            iq++;
+        }
+        // vector<string> seedvectors(groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.begin(), groupidtogroupstructmap[gid].filenametofileinfomap[fname].owners.end());
+        rotate(seedvectors.begin(), seedvectors.begin() + groupidtogroupstructmap[gid].filenametofileinfomap[fname].roationcounter, seedvectors.end());
+        cout << "NUmber of seeders of this file: = " << seedvectors.size() << endl;
+        for (string iq : seedvectors)
+        {
             string port = usernameportmap[(iq)];
             response = response + " " + port;
         }
-        cout << "MARK 1 " <<endl;
+        cout << "MARK 1 " << endl;
         groupidtogroupstructmap[gid].filenametofileinfomap[fname].roationcounter++;
-        cout << "MARK 2 " <<endl;
-
+        cout << "MARK 2 " << endl;
     }
     cout << "Packaging response: " << response << endl;
     return response;
@@ -512,6 +521,20 @@ void parsestring(string command, int sockfd)
                 string userport = tokens[4];
 
                 response = download_file(groupid, filename, destinationpath, userport);
+            }
+        }
+        else if (tokens[0] == "logout")
+        {
+            if (tokens.size() != 2)
+            {
+                response = "Command Error. Too few or too many parameters passed.";
+            }
+            else
+            {
+                string port = tokens[1];
+                string username = portusernamemap[port];
+                onlineusersset.erase(username);
+                response = "Successfully Logged out.";
             }
         }
         else
